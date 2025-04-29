@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator</title>
+    <title>QR Code Generated</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
@@ -28,17 +28,29 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             padding: 2rem;
             width: 100%;
-            max-width: 500px;
-            text-align: center;
+            max-width: 600px;
         }
         
         header {
+            text-align: center;
             margin-bottom: 2rem;
         }
         
         h1 {
             color: #333;
             margin-bottom: 0.5rem;
+        }
+        
+        .profile-info {
+            background-color: #f2f7ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-info p {
+            margin: 0.5rem 0;
+            color: #444;
         }
         
         .qr-options {
@@ -54,12 +66,17 @@
             display: block;
         }
         
-        select {
+        select, textarea {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         
         button {
@@ -84,13 +101,11 @@
             flex-direction: column;
             align-items: center;
             margin-top: 2rem;
+            text-align: center;
         }
         
         #qrcode {
             margin: 1rem 0;
-            padding: 1rem;
-            background-color: white;
-            border-radius: 8px;
         }
         
         .download-btn {
@@ -100,16 +115,6 @@
         
         .download-btn:hover {
             background-color: #218838;
-        }
-        
-        .scan-note {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background-color: #fff3cd;
-            border-radius: 5px;
-            color: #856404;
-            text-align: center;
-            font-size: 0.9rem;
         }
         
         .footer {
@@ -124,17 +129,31 @@
     <div class="container">
         <header>
             <h1>QR Code Generator</h1>
-            <p>Generate scannable QR codes with your information</p>
+            <p>Generate QR codes with your personal information</p>
         </header>
+        
+        <div class="profile-info">
+            <h3>Personal Details</h3>
+            <p><strong>Name:</strong> Rahul Jangra</p>
+            <p><strong>Phone:</strong> 9306762262</p>
+            <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/rahul-jangra-116069323/" target="_blank">linkedin.com/in/rahul-jangra-116069323/</a></p>
+            <p><strong>Education:</strong> BCA</p>
+        </div>
         
         <div class="qr-options">
             <div>
-                <label for="qr-type">Select Information Type:</label>
+                <label for="qr-type">Select QR Content Type:</label>
                 <select id="qr-type">
-                    <option value="contact">Complete Contact Card</option>
+                    <option value="contact">Contact Information</option>
                     <option value="linkedin">LinkedIn Profile</option>
                     <option value="phone">Phone Number</option>
+                    <option value="custom">Custom Content</option>
                 </select>
+            </div>
+            
+            <div id="custom-content-container" style="display: none;">
+                <label for="custom-content">Enter Custom Content:</label>
+                <textarea id="custom-content" placeholder="Enter the content you want to encode in the QR code"></textarea>
             </div>
             
             <button id="generate-btn">Generate QR Code</button>
@@ -142,30 +161,41 @@
         
         <div class="qr-result">
             <div id="qrcode"></div>
-            <div class="scan-note">
-                <p><strong>Scan the QR code</strong> to view contact information.</p>
-                <p>Information is only revealed when scanned.</p>
-            </div>
-            <button id="download-btn" class="download-btn">Download QR Code</button>
+            <button id="download-btn" class="download-btn" style="display: none;">Download QR Code</button>
         </div>
         
         <div class="footer">
-            <p>© 2025 Rahul Jangra | BCA</p>
+            <p>Created for Rahul Jangra | BCA Student</p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qrType = document.getElementById('qr-type');
+            const customContentContainer = document.getElementById('custom-content-container');
+            const customContent = document.getElementById('custom-content');
             const generateBtn = document.getElementById('generate-btn');
             const qrcodeContainer = document.getElementById('qrcode');
-            const downloadBtn = document.getElementById('download-btn');           
+            const downloadBtn = document.getElementById('download-btn');
+            
+            // Personal information
             const personalInfo = {
                 name: "Rahul Jangra",
                 phone: "9306762262",
                 linkedin: "https://www.linkedin.com/in/rahul-jangra-116069323/",
                 education: "BCA"
-            };                      
+            };
+            
+            // Show/hide custom content based on selection
+            qrType.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customContentContainer.style.display = 'block';
+                } else {
+                    customContentContainer.style.display = 'none';
+                }
+            });
+            
+            // Generate QR code based on selected type
             generateBtn.addEventListener('click', function() {
                 let content = '';
                 
@@ -185,7 +215,19 @@ END:VCARD`;
                     case 'phone':
                         content = `tel:${personalInfo.phone}`;
                         break;
+                    case 'custom':
+                        content = customContent.value.trim();
+                        if (!content) {
+                            alert('Please enter some custom content');
+                            return;
+                        }
+                        break;
                 }
+                
+                // Clear previous QR code
+                qrcodeContainer.innerHTML = '';
+                
+                // Generate new QR code
                 new QRCode(qrcodeContainer, {
                     text: content,
                     width: 200,
@@ -194,7 +236,12 @@ END:VCARD`;
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
                 });
+                
+                // Show download button
+                downloadBtn.style.display = 'block';
             });
+            
+            // Download QR code as image
             downloadBtn.addEventListener('click', function() {
                 const img = qrcodeContainer.querySelector('img');
                 if (img) {
@@ -204,6 +251,9 @@ END:VCARD`;
                     link.click();
                 }
             });
+            
+            // Initialize with contact information
+            qrType.value = 'contact';
             generateBtn.click();
         });
     </script>
